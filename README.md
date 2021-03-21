@@ -8,12 +8,13 @@ simple python-3 console game app
 - Python3
 - 100Kb free space
 ### What to do:
+#### Linux:
 - > git clone git@github.com:mamontov-aa/wumpus.git
-(Linux)
 - > python3 -m venv .venv
 - > .venv/bin/pip install -r requirements.txt
 - > .venv/bin/python3 wumpus.py
-(Windows)
+#### Windows:
+- > git clone git@github.com:mamontov-aa/wumpus.git
 - > python -m venv .venv
 - > .venv\scripts\pip.exe install -r requirements.txt
 - > .venv\scripts\python.exe wumpus.py
