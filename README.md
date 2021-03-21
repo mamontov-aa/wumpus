@@ -4,13 +4,20 @@ simple python-3 console game app
 ## How to run:
 ### Pre-requisites:
 - Internet connection (access to GitHub)
+- Git client
 - Python3
 - 100Kb free space
 ### What to do:
 - > git clone git@github.com:mamontov-aa/wumpus.git
+(Linux)
 - > python3 -m venv .venv
 - > .venv/bin/pip install -r requirements.txt
 - > .venv/bin/python3 wumpus.py
+(Windows)
+- > python -m venv .venv
+- > .venv\scripts\pip.exe install -r requirements.txt
+- > .venv\scripts\python.exe wumpus.py
+
 
 ## Gameplay:
 - GameWorld is a labirynth (non-directed graph)
@@ -24,7 +31,8 @@ simple python-3 console game app
 
 
 ## Side conditions:
-- When wumpus is being awoken on shooting - it moves AFTER the end of the shoot (not after the first step)
+- When player comes into hall where Wumpus is, Wumpus eats player regardless there can also be bats or gulf in this hall
+- When player is shooting, this shot wakes Wumpus only after shot ends
 - When round ends (no matter the player winned or losed) th world resets and the game restarts
 - No checks for map consistency and coherency
 - Wumpus and bats CAN locate in cave-romms with gulfs
