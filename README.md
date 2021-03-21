@@ -19,9 +19,7 @@ simple python-3 console game app
 - Wumpus can eat player
 - There are also bats (carry player to random place) and gulfs (player dyes inside)
 ### Controls:
-- Console commands [cmd_name arg1 arg2 ...]
-- Type [help] to see the actual list
-
+- Console commands [cmd_name] and then follow instructions
 
 ## Side conditions:
 - When wumpus is being awoken on shooting - it moves AFTER the end of the shoot (not after the first step)
@@ -29,9 +27,3 @@ simple python-3 console game app
 - No checks for map consistency and coherency
 - Wumpus and bats CAN locate in cave-romms with gulfs
 - Bats cannot put the player to their own place
-
-## Future ideas
-- Add OS-like commands input with TAB
-- Add ability to pick up arrow perviously shot and missed (think about gameplay)
-- Add game file-save an file-load options
-- Add world file-load option
