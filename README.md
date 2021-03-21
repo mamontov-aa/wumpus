@@ -7,8 +7,8 @@ simple python-3 console game app
 - Python3
 - 100Kb free space
 ### What to do:
-> git clone git@github.com:mamontov-aa/wumpus.git
-> python3 wumpus
+- > git clone git@github.com:mamontov-aa/wumpus.git
+- > python3 wumpus
 
 ## Gameplay:
 - GameWorld is a labirynth (non-directed graph)
