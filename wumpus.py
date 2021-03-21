@@ -141,7 +141,7 @@ class CPlayer(CMapActor):
         if self.game_map.wumpus.position in shooting_list:
             self.game_map.wumpus.die()
         else:
-            print(f"You missed. Be careful to avoid Wumpus wake-up. Arrows left - {self.arrows}")
+            print(f"You missed. Be careful to avoid Wumpus wake-up. Arrows left: {self.arrows}")
             self.game_map.wumpus.wake_up()
 
     def get_stats(self):
