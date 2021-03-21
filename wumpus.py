@@ -128,12 +128,12 @@ class CPlayer(CMapActor):
             self.position = self.game_map.get_player_start_position()
         self.name = name
         self.arrow_range = 3
-        self.lifes = 5
+        self.lifes = 2
         self.reload()
     
     def reload(self):
         self.arrows = 3
-        self.lifes -= 1
+        
     
     def shoot(self, shooting_str):
         self.arrows -= 1
@@ -216,7 +216,7 @@ class CBatsFlock(CMapActor):
 
 class CController():
     def __init__(self, game_map = None, player = None):
-        self.available_commands = ["move", "shoot", "info", "godmode", "cancel", "reset", "quit", "help"]
+        self.available_commands = ["move", "shoot", "info", "godmode", "quit", "help"]
         self.cursor_text = "> "
         if game_map is not None:
             self.game_map = game_map
@@ -239,7 +239,7 @@ class CController():
                 print(f"ERROR: Command '{new_cmd}' not recognized")
 
     def exit_game(self):
-        print("Bye ...")
+        print("\nBye ...")
         sys.exit()
 
     def print_help(self):
@@ -260,7 +260,6 @@ class CController():
 
     def print_info(self):
         print(self.player.get_stats())
-        self.print_cave_info()
 
     def print_hello(self):
         print("Hello and welcome to the game")
@@ -273,13 +272,15 @@ class CController():
         if self.godmode:
             print(f"Wumpus in [{self.game_map.wumpus.position.name}]")
         
-    def wait_for_replay(self, msg = None, take_life: int = 0):
+    def continue_game(self, msg = None, take_life: int = 0):
+        if self.player.lifes < 1:
+            cc.exit_game()
         while True:
-            play_again = input(f"Continue ({self.player.lifes} left) - [y/n]? > ").lower()
+            play_again = input(f"{f'Continue ({self.player.lifes} left)' if msg is None else 'msg'} - [y/n]? > ").lower()
             if play_again == 'n':
                 cc.exit_game()
             elif play_again == 'y':
-                self.player.lifes -= 1
+                self.player.lifes -= take_life
                 self.game_map.reset_actors()
                 print("================================================================")
                 break
@@ -289,8 +290,9 @@ class CController():
     def main(self):
         while True:
             # main player step
-            print("----------------------------------------------------------------")
+            print()
             self.print_player_position_info()
+            # input
             (cmd, args) = self.read_command()
             if cmd == "quit":
                 self.exit_game()
@@ -317,8 +319,12 @@ class CController():
             else:
                 print(f"Command [{cmd}] not implemented yet")
             # check step for final conditions
-            if self.player.is_dead or self.game_map.wumpus.is_dead:
-                self.wait_for_replay("Play one more time [y/n]? > ")
+            if self.game_map.wumpus.is_dead:
+                print("You WIN ;-)")
+                self.continue_game("Play again [y/n]? > ")
+            if self.player.is_dead:
+                print("You LOOSE :-(")
+                self.continue_game(take_life=1)
 
 
 the_world = CGameMap()
