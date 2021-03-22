@@ -27,6 +27,28 @@ class CGraph():
     def get_nodenames(self):
         return list(x for x in self.nodes)
 
+    def get_correct_route(self, first_pos: CGraphNode, route_str: str, n_limit: int = None):
+        route_list = route_str.split(" ")
+        last_node = first_pos
+        route_list_correct = []
+        for i in range(len(route_list)):
+            if (n_limit is not None and i < n_limit) and route_list[i] in self.get_nodenames() and route_list[i] in last_node.get_adjacents_names():
+                good_node = self.nodes[route_list[i]]
+                route_list_correct.append(good_node)
+                last_node = good_node
+            else:
+                print(f"Route {route_list} is shrinked to {route_list_correct}")
+                break
+        return (route_list_correct, len(route_list)-len(route_list_correct))
+
+    def get_subgraph(self, sub_node, sub_range: int = 0):
+        if sub_range == 0:
+            return [sub_node]
+        else:
+            sub_graph = [sub_node]
+            for i_adjacent in sub_node.adjacents:
+                sub_graph += self.get_subgraph(i_adjacent, sub_range-1)
+            return set(sub_graph)
 
 class CGameMap(CGraph):
     def __init__(self):
@@ -115,7 +137,6 @@ class CMapActor(CMapObject):
     def move_to(self, position_name):
         self.position = self.game_map.nodes[position_name]
 
-
     def die(self):
         self.is_dead = True
 
@@ -134,33 +155,24 @@ class CPlayer(CMapActor):
     def reload(self):
         self.arrows = 3
 
-    
     def shoot(self, shooting_str):
         self.arrows -= 1
-        shooting_list = self.get_correct_shooting_list(shooting_str)
+        shooting_list, n_random = self.game_map.get_correct_route(self.position, shooting_str, self.arrow_range)
         if self.game_map.wumpus.position in shooting_list:
             self.game_map.wumpus.die()
         else:
-            print(f"You missed. Be careful to avoid Wumpus wake-up. Arrows left: {self.arrows}")
-            self.game_map.wumpus.wake_up()
+            if n_random > 0:
+                random_shoot_start = self.position if len(shooting_list) == 0 else shooting_list[-1]
+                random_shooting_area = self.game_map.get_subgraph(random_shoot_start, n_random)
+                if self.position == rnd.choice(random_shooting_area):
+                    print("Player commited suicide")
+                    self.die()
+            if not self.is_dead:
+                print(f"You missed and woke up Wumpus. Arrows left: {self.arrows}")
+                self.game_map.wumpus.wake_up()
 
     def get_stats(self):
         return "Player '" + self.name + "', position: [" + self.position.name + "], lifes left: " + str(self.lifes) + ", arrows left: " + str(self.arrows)
-
-    def get_correct_shooting_list(self, shooting_str: str):
-        # rc = None
-        shooting_list = shooting_str.split(" ")
-        last_node = self.position
-        shooting_list_good = []
-        for i in range(len(shooting_list)):
-            if i < self.arrow_range and shooting_list[i] in self.game_map.get_nodenames() and shooting_list[i] in last_node.get_adjacents_names():
-                good_node = self.game_map.nodes[shooting_list[i]]
-                shooting_list_good.append(good_node)
-                last_node = good_node
-            else:
-                print(f"Your shot is shrinked to {shooting_list_good}")
-                break
-        return shooting_list_good
 
     def move_to(self, position):
         if not self.is_dead:
@@ -198,7 +210,7 @@ class CWumpus(CMapActor):
             self.woken_up = False
 
 
-class CBatsFlock(CMapActor):
+class CBatFlock(CMapActor):
     def __init__(self, game_map = None):
         super().__init__(game_map)
         if game_map is not None:
@@ -229,14 +241,14 @@ class CController():
     def read_command(self):
         while True:
             try:
-                new_cmd = input(self.cursor_text).split(sep=" ")
+                new_cmd_list = input(self.cursor_text).split(sep=" ")
             except KeyboardInterrupt:
-                new_cmd = ["quit"]
-            match_commads = list(x for x in self.available_commands if x.lower().startswith(new_cmd[0].lower()))
-            if len(match_commads) == 1:
-                return (match_commads[0], list(set(new_cmd) - set([new_cmd[0]])))
+                new_cmd_list = ["quit"]
+            match_commands = list(x for x in self.available_commands if x.lower().startswith(new_cmd_list[0].lower()))
+            if len(match_commands) == 1:
+                return (match_commands[0], new_cmd_list[1:])
             else:
-                print(f"ERROR: Command '{new_cmd}' not recognized")
+                print(f"ERROR: Command '{new_cmd_list}' not recognized")
 
     def exit_game(self):
         print("\nBye ...")
@@ -276,7 +288,7 @@ class CController():
         if self.player.lifes < 1:
             cc.exit_game()
         while True:
-            play_again = input(f"{f'Continue ({self.player.lifes} left)' if msg is None else 'msg'} - [y/n]? > ").lower()
+            play_again = input(f"{f'Continue ({self.player.lifes} left)' if msg is None else msg} - [y/n]? > ").lower()
             if play_again == 'n':
                 cc.exit_game()
             elif play_again == 'y':
@@ -301,16 +313,14 @@ class CController():
             elif cmd == "info":
                 self.print_info()
             elif cmd == "move":
-                while True:
-                    move_to = input(f"Move to {self.player.position.get_adjacents_names()} or stay in [{self.player.position.name}]? > ")
-                    if move_to in self.player.position.get_adjacents_names() + [self.player.position.name]:
-                        self.player.move_to(move_to)
-                        break
-                    else:
-                        print(f"Can`t move to [{move_to}], try again. Hint: cave names are case-sensitive.")
+                move_to = " ".join(args) if len(args) > 0 else input(f"Move to {self.player.position.get_adjacents_names()} or stay in [{self.player.position.name}]? > ")
+                if move_to in self.player.position.get_adjacents_names() + [self.player.position.name]:
+                    self.player.move_to(move_to)
+                else:
+                    print(f"Can`t move to [{move_to}], try again. Hint: cave names are case-sensitive.")
             elif cmd == "shoot":
                 if self.player.arrows > 0:
-                    shooting_str = input(f"Type shoot route in one line space-delimited (like [A B C]) up to {self.player.arrow_range} steps > ")
+                    shooting_str = " ".join(args) if len(args) > 0 else input(f"Type shoot route in one line space-delimited (like [A B C]) up to {self.player.arrow_range} steps > ")
                     self.player.shoot(shooting_str)
                 else:
                     print("Nothing to shoot")
@@ -334,8 +344,8 @@ the_world.set_gulfs()
 
 the_player = CPlayer(game_map=the_world, name="WumpusHunter")
 the_wumpus = CWumpus(game_map=the_world)
-bats1 = CBatsFlock(game_map=the_world)
-bats2 = CBatsFlock(game_map=the_world)
+bats1 = CBatFlock(game_map=the_world)
+bats2 = CBatFlock(game_map=the_world)
 
 cc = CController(the_world, the_player)
 cc.print_hello()
